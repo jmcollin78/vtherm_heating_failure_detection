@@ -1,33 +1,33 @@
 {
-  "config": {
-    "step": {
-      "thermostat": {
-        "title": "Detekce poruchy vytápění",
-        "description": "Nastavte výchozí hodnoty nebo vyberte Versatile Thermostat.",
-        "data": {
-          "target_entity": "Versatile Thermostat",
-          "enabled": "Povolit detekci",
-          "heating_percent_threshold": "Prahová hodnota vytápění",
-          "cooling_percent_threshold": "Prahová hodnota chlazení",
-          "temperature_delta": "Minimální očekávaná změna teploty",
-          "delay_minutes": "Doba detekce (minuty)",
-          "activation_template": "Aktivační šablona"
+    "config": {
+        "step": {
+            "thermostat": {
+                "title": "Detekce poruchy vytápění",
+                "description": "Nastavte výchozí hodnoty nebo vyberte Versatile Thermostat.",
+                "data": {
+                    "target_entity": "Versatile Thermostat",
+                    "enabled": "Povolit detekci",
+                    "heating_percent_threshold": "Prahová hodnota vytápění",
+                    "cooling_percent_threshold": "Prahová hodnota chlazení",
+                    "temperature_delta": "Minimální očekávaná změna teploty",
+                    "delay_minutes": "Doba detekce (minuty)",
+                    "activation_template": "Aktivační šablona"
+                }
+            },
+            "init": {
+                "title": "Detekce poruchy vytápění",
+                "data": {
+                    "enabled": "Povolit detekci",
+                    "heating_percent_threshold": "Prahová hodnota vytápění",
+                    "cooling_percent_threshold": "Prahová hodnota chlazení",
+                    "temperature_delta": "Minimální očekávaná změna teploty",
+                    "delay_minutes": "Doba detekce (minuty)",
+                    "activation_template": "Aktivační šablona"
+                }
+            }
+        },
+        "error": {
+            "already_configured": "Tento termostat již má vlastní nastavení."
         }
-      },
-      "init": {
-        "title": "Detekce poruchy vytápění",
-        "data": {
-          "enabled": "Povolit detekci",
-          "heating_percent_threshold": "Prahová hodnota vytápění",
-          "cooling_percent_threshold": "Prahová hodnota chlazení",
-          "temperature_delta": "Minimální očekávaná změna teploty",
-          "delay_minutes": "Doba detekce (minuty)",
-          "activation_template": "Aktivační šablona"
-        }
-      }
-    },
-    "error": {
-      "already_configured": "Tento termostat již má vlastní nastavení."
     }
-  }
 }

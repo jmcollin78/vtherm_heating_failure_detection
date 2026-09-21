@@ -1,33 +1,33 @@
 {
-  "config": {
-    "step": {
-      "thermostat": {
-        "title": "Erkennung von Heizungsstörungen",
-        "description": "Konfigurieren Sie Standardwerte oder wählen Sie einen Versatile Thermostat.",
-        "data": {
-          "target_entity": "Versatile Thermostat",
-          "enabled": "Erkennung aktivieren",
-          "heating_percent_threshold": "Heizschwelle",
-          "cooling_percent_threshold": "Kühlschwelle",
-          "temperature_delta": "Minimal erwartete Temperaturänderung",
-          "delay_minutes": "Erkennungszeit (Minuten)",
-          "activation_template": "Aktivierungsvorlage"
+    "config": {
+        "step": {
+            "thermostat": {
+                "title": "Erkennung von Heizungsstörungen",
+                "description": "Konfigurieren Sie Standardwerte oder wählen Sie einen Versatile Thermostat.",
+                "data": {
+                    "target_entity": "Versatile Thermostat",
+                    "enabled": "Erkennung aktivieren",
+                    "heating_percent_threshold": "Heizschwelle",
+                    "cooling_percent_threshold": "Kühlschwelle",
+                    "temperature_delta": "Minimal erwartete Temperaturänderung",
+                    "delay_minutes": "Erkennungszeit (Minuten)",
+                    "activation_template": "Aktivierungsvorlage"
+                }
+            },
+            "init": {
+                "title": "Erkennung von Heizungsstörungen",
+                "data": {
+                    "enabled": "Erkennung aktivieren",
+                    "heating_percent_threshold": "Heizschwelle",
+                    "cooling_percent_threshold": "Kühlschwelle",
+                    "temperature_delta": "Minimal erwartete Temperaturänderung",
+                    "delay_minutes": "Erkennungszeit (Minuten)",
+                    "activation_template": "Aktivierungsvorlage"
+                }
+            }
+        },
+        "error": {
+            "already_configured": "Dieser Thermostat hat bereits eine eigene Konfiguration."
         }
-      },
-      "init": {
-        "title": "Erkennung von Heizungsstörungen",
-        "data": {
-          "enabled": "Erkennung aktivieren",
-          "heating_percent_threshold": "Heizschwelle",
-          "cooling_percent_threshold": "Kühlschwelle",
-          "temperature_delta": "Minimal erwartete Temperaturänderung",
-          "delay_minutes": "Erkennungszeit (Minuten)",
-          "activation_template": "Aktivierungsvorlage"
-        }
-      }
-    },
-    "error": {
-      "already_configured": "Dieser Thermostat hat bereits eine eigene Konfiguration."
     }
-  }
 }

@@ -1,33 +1,33 @@
 {
-  "config": {
-    "step": {
-      "thermostat": {
-        "title": "Wykrywanie awarii ogrzewania",
-        "description": "Skonfiguruj wartości domyślne lub wybierz Versatile Thermostat.",
-        "data": {
-          "target_entity": "Versatile Thermostat",
-          "enabled": "Włącz wykrywanie",
-          "heating_percent_threshold": "Próg ogrzewania",
-          "cooling_percent_threshold": "Próg chłodzenia",
-          "temperature_delta": "Minimalna oczekiwana zmiana temperatury",
-          "delay_minutes": "Czas wykrywania (minuty)",
-          "activation_template": "Szablon aktywacji"
+    "config": {
+        "step": {
+            "thermostat": {
+                "title": "Wykrywanie awarii ogrzewania",
+                "description": "Skonfiguruj wartości domyślne lub wybierz Versatile Thermostat.",
+                "data": {
+                    "target_entity": "Versatile Thermostat",
+                    "enabled": "Włącz wykrywanie",
+                    "heating_percent_threshold": "Próg ogrzewania",
+                    "cooling_percent_threshold": "Próg chłodzenia",
+                    "temperature_delta": "Minimalna oczekiwana zmiana temperatury",
+                    "delay_minutes": "Czas wykrywania (minuty)",
+                    "activation_template": "Szablon aktywacji"
+                }
+            },
+            "init": {
+                "title": "Wykrywanie awarii ogrzewania",
+                "data": {
+                    "enabled": "Włącz wykrywanie",
+                    "heating_percent_threshold": "Próg ogrzewania",
+                    "cooling_percent_threshold": "Próg chłodzenia",
+                    "temperature_delta": "Minimalna oczekiwana zmiana temperatury",
+                    "delay_minutes": "Czas wykrywania (minuty)",
+                    "activation_template": "Szablon aktywacji"
+                }
+            }
+        },
+        "error": {
+            "already_configured": "Ten termostat ma już własną konfigurację."
         }
-      },
-      "init": {
-        "title": "Wykrywanie awarii ogrzewania",
-        "data": {
-          "enabled": "Włącz wykrywanie",
-          "heating_percent_threshold": "Próg ogrzewania",
-          "cooling_percent_threshold": "Próg chłodzenia",
-          "temperature_delta": "Minimalna oczekiwana zmiana temperatury",
-          "delay_minutes": "Czas wykrywania (minuty)",
-          "activation_template": "Szablon aktywacji"
-        }
-      }
-    },
-    "error": {
-      "already_configured": "Ten termostat ma już własną konfigurację."
     }
-  }
 }
