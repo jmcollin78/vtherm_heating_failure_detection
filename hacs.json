@@ -1,0 +1,7 @@
+{
+    "name": "VTherm Heating Failure Detection",
+    "render_readme": true,
+    "homeassistant": "2025.1.0",
+    "zip_release": true,
+    "filename": "vtherm_heating_failure_detection.zip"
+}

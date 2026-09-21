@@ -1,0 +1,22 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Détection de panne de chauffage",
+                "description": "Configurez les valeurs par défaut ou sélectionnez un Versatile Thermostat.",
+                "data": {
+                    "vtherm_unique_id": "Identifiant unique du Versatile Thermostat",
+                    "enabled": "Activer la détection",
+                    "heating_percent_threshold": "Seuil de chauffage (%)",
+                    "cooling_percent_threshold": "Seuil de refroidissement (%)",
+                    "temperature_delta": "Variation minimale de température attendue",
+                    "delay_minutes": "Délai de détection (minutes)",
+                    "activation_template": "Modèle d'activation"
+                }
+            }
+        },
+        "error": {
+            "already_configured": "Ce thermostat possède déjà une surcharge."
+        }
+    }
+}

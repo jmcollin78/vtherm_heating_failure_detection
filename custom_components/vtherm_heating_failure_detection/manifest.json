@@ -1,0 +1,18 @@
+{
+    "domain": "vtherm_heating_failure_detection",
+    "name": "VTherm Heating Failure Detection",
+    "codeowners": [
+        "@jmcollin"
+    ],
+    "config_flow": true,
+    "dependencies": [
+        "versatile_thermostat"
+    ],
+    "documentation": "https://github.com/jmcollin/vtherm_heating_failure_detection",
+    "integration_type": "service",
+    "iot_class": "calculated",
+    "requirements": [
+        "vtherm-api>=0.4.0"
+    ],
+    "version": "0.1.0"
+}

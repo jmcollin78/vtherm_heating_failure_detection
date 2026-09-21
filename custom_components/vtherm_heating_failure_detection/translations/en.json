@@ -1,0 +1,22 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Heating failure detection",
+                "description": "Configure default values or select one Versatile Thermostat.",
+                "data": {
+                    "vtherm_unique_id": "Versatile Thermostat unique ID",
+                    "enabled": "Enable detection",
+                    "heating_percent_threshold": "Heating threshold (%)",
+                    "cooling_percent_threshold": "Cooling threshold (%)",
+                    "temperature_delta": "Minimum expected temperature change",
+                    "delay_minutes": "Detection delay (minutes)",
+                    "activation_template": "Activation template"
+                }
+            }
+        },
+        "error": {
+            "already_configured": "This thermostat already has an override."
+        }
+    }
+}

@@ -1,0 +1,8 @@
+[project]
+name = "vtherm-heating-failure-detection"
+version = "0.1.0"
+description = "Heating and cooling failure detection plugin for Versatile Thermostat"
+requires-python = ">=3.13"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
