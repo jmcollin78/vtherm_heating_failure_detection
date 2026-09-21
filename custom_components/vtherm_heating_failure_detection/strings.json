@@ -1,11 +1,22 @@
 {
   "config": {
     "step": {
-      "user": {
+      "thermostat": {
         "title": "Heating failure detection",
         "description": "Configure default values or select one Versatile Thermostat.",
         "data": {
-          "vtherm_unique_id": "Versatile Thermostat unique ID",
+          "target_entity": "Versatile Thermostat",
+          "enabled": "Enable detection",
+          "heating_percent_threshold": "Heating threshold",
+          "cooling_percent_threshold": "Cooling threshold",
+          "temperature_delta": "Minimum expected temperature change",
+          "delay_minutes": "Detection delay (minutes)",
+          "activation_template": "Activation template"
+        }
+      },
+      "init": {
+        "title": "Heating failure detection",
+        "data": {
           "enabled": "Enable detection",
           "heating_percent_threshold": "Heating threshold",
           "cooling_percent_threshold": "Cooling threshold",

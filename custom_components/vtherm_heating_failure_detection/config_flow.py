@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Self
 
 import voluptuous as vol
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
@@ -10,7 +10,21 @@ from homeassistant.config_entries import ConfigFlow, OptionsFlow
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import selector
 
-from .const import *
+from .const import (
+    CONF_ACTIVATION_TEMPLATE,
+    CONF_COOLING_PERCENT_THRESHOLD,
+    CONF_DELAY_MINUTES,
+    CONF_ENABLED,
+    CONF_HEATING_PERCENT_THRESHOLD,
+    CONF_TEMPERATURE_DELTA,
+    CONF_VTHERM_UNIQUE_ID,
+    DEFAULT_COOLING_PERCENT_THRESHOLD,
+    DEFAULT_DELAY_MINUTES,
+    DEFAULT_ENABLED,
+    DEFAULT_HEATING_PERCENT_THRESHOLD,
+    DEFAULT_TEMPERATURE_DELTA,
+    DOMAIN,
+)
 
 
 def _options_schema(defaults: dict[str, Any]) -> vol.Schema:
@@ -35,6 +49,10 @@ class HeatingFailureConfigFlow(ConfigFlow, domain=DOMAIN):
     """Configure global defaults and per-thermostat overrides."""
 
     VERSION = 1
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return whether another flow targets the same configuration entry."""
+        return other_flow.unique_id == self.unique_id
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None):
         if not self._async_current_entries():

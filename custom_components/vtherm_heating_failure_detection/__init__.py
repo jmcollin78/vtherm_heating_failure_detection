@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CoreState, HomeAssistant
 
@@ -57,6 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload thermostats after plugin options change."""
+    hass.data[DOMAIN]["entries"][entry.entry_id] = dict(entry.options or entry.data)
     await _reload_thermostats(hass, entry)
 
 

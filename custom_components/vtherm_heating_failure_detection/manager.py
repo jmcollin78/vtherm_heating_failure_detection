@@ -94,6 +94,9 @@ class HeatingFailureManager:
             self._configured = False
             self._heating_state = STATE_UNAVAILABLE
             self._cooling_state = STATE_UNAVAILABLE
+            self._hass.data.get(DOMAIN, {}).get("managers", {}).pop(
+                self._thermostat.unique_id, None
+            )
             return
         self._configured = True
         self._heating_threshold = float(config[CONF_HEATING_PERCENT_THRESHOLD])
@@ -116,6 +119,9 @@ class HeatingFailureManager:
         """Release registered callbacks."""
         while self._listeners:
             self._listeners.pop()()
+        managers = self._hass.data.get(DOMAIN, {}).get("managers", {})
+        if managers.get(self._thermostat.unique_id) is self:
+            managers.pop(self._thermostat.unique_id, None)
 
     def add_listener(self, func: CALLBACK_TYPE) -> None:
         """Register a callback released on stop."""
@@ -129,14 +135,30 @@ class HeatingFailureManager:
         """Run one detection cycle and return the active failure state."""
         if not self._configured or not getattr(self._thermostat, "has_prop", False):
             return False
-        if str(getattr(self._thermostat, "requested_hvac_mode", getattr(self._thermostat, "vtherm_hvac_mode", ""))).lower() == "off":
+        if str(self._thermostat.requested_hvac_mode).lower() == "off":
             self._reset(STATE_OFF)
             return False
         if not self._is_template_enabled():
-            was_detected = self.is_failure_detected
+            now_temperature = self._thermostat.current_temperature or 0.0
+            on_percent = self._thermostat.on_percent or 0.0
+            if self._heating_state == STATE_ON:
+                self._set_state(
+                    FAILURE_TYPE_HEATING,
+                    STATE_OFF,
+                    on_percent,
+                    0.0,
+                    now_temperature,
+                )
+            if self._cooling_state == STATE_ON:
+                self._set_state(
+                    FAILURE_TYPE_COOLING,
+                    STATE_OFF,
+                    on_percent,
+                    0.0,
+                    now_temperature,
+                )
             self._reset(STATE_OFF)
-            if was_detected:
-                self._publish_update()
+            self._publish_update()
             return False
 
         now = self._thermostat.now
@@ -145,7 +167,7 @@ class HeatingFailureManager:
         if temperature is None or on_percent is None:
             return False
 
-        if str(getattr(self._thermostat, "vtherm_hvac_mode", "")).lower() == "heat":
+        if str(self._thermostat.vtherm_hvac_mode).lower() == "heat":
             self._check_heating(now, temperature, on_percent)
             self._check_cooling(now, temperature, on_percent)
         if self._heating_state == STATE_UNKNOWN:
@@ -218,7 +240,7 @@ class HeatingFailureManager:
     def _diagnose(self, failure_type: str) -> dict[str, Any]:
         diagnosis = self._empty_diagnosis()
         mismatches = []
-        for valve in getattr(self._thermostat, "valve_diagnostics", ()):
+        for valve in self._thermostat.valve_diagnostics:
             if valve.should_be_active == valve.is_active:
                 continue
             kind = "valve_stuck_closed" if valve.should_be_active else "valve_stuck_open"
@@ -243,6 +265,26 @@ class HeatingFailureManager:
         self._baseline_temperature = None
         self._heating_state = self._cooling_state = state
 
+    def _tracking_info(self, start_time: datetime | None) -> dict[str, Any]:
+        """Return the historical diagnostic tracking attributes."""
+        if start_time is None:
+            return {
+                "is_tracking": False,
+                "initial_temperature": None,
+                "current_temperature": None,
+                "remaining_time_min": None,
+                "elapsed_time_min": None,
+            }
+
+        elapsed_minutes = (self._thermostat.now - start_time).total_seconds() / 60
+        return {
+            "is_tracking": True,
+            "initial_temperature": self._baseline_temperature,
+            "current_temperature": self._thermostat.current_temperature,
+            "remaining_time_min": round(max(0, self._delay_minutes - elapsed_minutes), 1),
+            "elapsed_time_min": round(elapsed_minutes, 1),
+        }
+
     def _publish_update(self) -> None:
         self._thermostat.update_custom_attributes()
         self._thermostat.async_write_ha_state()
@@ -252,6 +294,11 @@ class HeatingFailureManager:
         """Add the historical public attribute structure to the climate entity."""
         attributes["is_heating_failure_detection_configured"] = self._configured
         if self._configured:
+            diagnosis = self._empty_diagnosis()
+            if self._heating_state == STATE_ON:
+                diagnosis = self._diagnose(FAILURE_TYPE_HEATING)
+            elif self._cooling_state == STATE_ON:
+                diagnosis = self._diagnose(FAILURE_TYPE_COOLING)
             attributes[MANAGER_ATTRIBUTES_KEY] = {
                 "heating_failure_state": self._heating_state,
                 "cooling_failure_state": self._cooling_state,
@@ -259,5 +306,12 @@ class HeatingFailureManager:
                 "cooling_failure_threshold": self._cooling_threshold,
                 "detection_delay_min": self._delay_minutes,
                 "temperature_change_tolerance": self._temperature_delta,
+                "failure_detection_enable_template": (
+                    self._template.template if self._template is not None else None
+                ),
                 "is_detection_enabled_by_template": self._is_template_enabled(),
+                "heating_tracking": self._tracking_info(self._high_power_started),
+                "cooling_tracking": self._tracking_info(self._zero_power_started),
+                "root_cause": diagnosis["root_cause"],
+                "root_cause_entity_id": diagnosis["root_cause_entity_id"],
             }
