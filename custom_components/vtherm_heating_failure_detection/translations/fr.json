@@ -53,5 +53,12 @@
         "error": {
             "already_configured": "Ce thermostat possède déjà une surcharge."
         }
+    },
+    "entity": {
+        "binary_sensor": {
+            "heating_failure_state": {
+                "name": "État d'anomalie de chauffe"
+            }
+        }
     }
 }

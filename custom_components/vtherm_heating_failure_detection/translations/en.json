@@ -53,5 +53,12 @@
         "error": {
             "already_configured": "This thermostat already has an override."
         }
+    },
+    "entity": {
+        "binary_sensor": {
+            "heating_failure_state": {
+                "name": "Heating failure state"
+            }
+        }
     }
 }
