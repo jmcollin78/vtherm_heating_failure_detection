@@ -25,7 +25,7 @@ jobs:
                   zip -r ../../vtherm_heating_failure_detection.zip .
 
             - name: Create Release
-              uses: softprops/action-gh-release@v1
+              uses: softprops/action-gh-release@v2.2.1
               with:
                   tag_name: ${{ github.ref_name }}
                   name: Release ${{ github.ref_name }}
