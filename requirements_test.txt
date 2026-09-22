@@ -1,0 +1,8 @@
+# Runtime dependencies required by the integration tests.
+homeassistant
+vtherm_api>=0.5.0
+
+# Test runner and plugins used by .github/workflows/pytest.yml.
+pytest
+pytest-timeout
+pytest-xdist
