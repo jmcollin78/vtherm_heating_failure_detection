@@ -222,6 +222,25 @@ class HeatingFailureManager:
         if old_state == state:
             return
         setattr(self, attribute, state)
+        if state == STATE_ON:
+            _LOGGER.warning(
+                "%s - %s failure detected: on_percent=%.0f%%, temperature_difference=%.2f°C",
+                self._thermostat,
+                failure_type,
+                on_percent * 100,
+                difference,
+            )
+        elif old_state == STATE_ON:
+            _LOGGER.info(
+                "%s - %s failure resolved: on_percent=%.0f%%, temperature_difference=%.2f°C",
+                self._thermostat,
+                failure_type,
+                on_percent * 100,
+                difference,
+            )
+
+        if state != STATE_ON and old_state != STATE_ON:
+            return
         event = f"{failure_type}_failure_{'start' if state == STATE_ON else 'end'}"
         self._send_event(event, failure_type, on_percent, difference, temperature)
 
