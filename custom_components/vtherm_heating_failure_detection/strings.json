@@ -1,11 +1,35 @@
 {
   "config": {
     "step": {
+      "global": {
+        "title": "Import central heating failure settings",
+        "description": "Review the values imported from the Versatile Thermostat central configuration before creating the plugin defaults.",
+        "data": {
+          "enabled": "Enable detection",
+          "heating_percent_threshold": "Heating threshold",
+          "cooling_percent_threshold": "Cooling threshold",
+          "temperature_delta": "Minimum expected temperature change",
+          "delay_minutes": "Detection delay (minutes)",
+          "activation_template": "Activation template"
+        }
+      },
       "thermostat": {
         "title": "Heating failure detection",
         "description": "Configure default values or select one Versatile Thermostat.",
         "data": {
           "target_entity": "Versatile Thermostat",
+          "enabled": "Enable detection",
+          "heating_percent_threshold": "Heating threshold",
+          "cooling_percent_threshold": "Cooling threshold",
+          "temperature_delta": "Minimum expected temperature change",
+          "delay_minutes": "Detection delay (minutes)",
+          "activation_template": "Activation template"
+        }
+      },
+      "thermostat_options": {
+        "title": "Import thermostat heating failure settings",
+        "description": "Review the values imported from the selected Versatile Thermostat before creating its plugin override.",
+        "data": {
           "enabled": "Enable detection",
           "heating_percent_threshold": "Heating threshold",
           "cooling_percent_threshold": "Cooling threshold",

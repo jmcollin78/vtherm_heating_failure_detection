@@ -7,6 +7,7 @@ from typing import Any
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.template import Template
 from vtherm_api.const import EventType
@@ -86,10 +87,9 @@ class HeatingFailureManager:
         return self._cooling_state == STATE_ON
 
     def post_init(self, entry_infos: dict[str, Any]) -> None:
-        """Load the effective plugin configuration for this thermostat."""
-        del entry_infos
+        """Load plugin settings and fall back to persisted legacy core values."""
         entries = self._hass.data.get(DOMAIN, {}).get("entries", {})
-        config = effective_config(entries, self._thermostat.unique_id)
+        config = effective_config(entries, self._thermostat.unique_id, entry_infos)
         if config is None or not config[CONF_ENABLED]:
             self._configured = False
             self._heating_state = STATE_UNAVAILABLE
@@ -136,7 +136,10 @@ class HeatingFailureManager:
         if not self._configured or not getattr(self._thermostat, "has_prop", False):
             return False
         if str(self._thermostat.requested_hvac_mode).lower() == "off":
+            was_detected = self.is_failure_detected
             self._reset(STATE_OFF)
+            if was_detected:
+                self._publish_update()
             return False
         if not self._is_template_enabled():
             now_temperature = self._thermostat.current_temperature or 0.0
@@ -241,6 +244,8 @@ class HeatingFailureManager:
         diagnosis = self._empty_diagnosis()
         mismatches = []
         for valve in self._thermostat.valve_diagnostics:
+            if valve.should_be_active is None or valve.is_active is None:
+                continue
             if valve.should_be_active == valve.is_active:
                 continue
             kind = "valve_stuck_closed" if valve.should_be_active else "valve_stuck_open"
@@ -255,8 +260,13 @@ class HeatingFailureManager:
         if self._template is None:
             return True
         try:
-            return self._template.async_render().strip().lower() in {"true", "1", "yes", "on"}
-        except Exception:  # noqa: BLE001
+            result = self._template.async_render()
+            if isinstance(result, bool):
+                return result
+            if isinstance(result, str):
+                return result.strip().lower() in {"true", "1", "yes", "on"}
+            return bool(result)
+        except TemplateError:
             _LOGGER.warning("%s - activation template failed; detection remains enabled", self._thermostat)
             return True
 
@@ -294,7 +304,7 @@ class HeatingFailureManager:
         """Add the historical public attribute structure to the climate entity."""
         attributes["is_heating_failure_detection_configured"] = self._configured
         if self._configured:
-            diagnosis = self._empty_diagnosis()
+            diagnosis: dict[str, Any] = {}
             if self._heating_state == STATE_ON:
                 diagnosis = self._diagnose(FAILURE_TYPE_HEATING)
             elif self._cooling_state == STATE_ON:
@@ -312,6 +322,6 @@ class HeatingFailureManager:
                 "is_detection_enabled_by_template": self._is_template_enabled(),
                 "heating_tracking": self._tracking_info(self._high_power_started),
                 "cooling_tracking": self._tracking_info(self._zero_power_started),
-                "root_cause": diagnosis["root_cause"],
-                "root_cause_entity_id": diagnosis["root_cause_entity_id"],
+                "root_cause": diagnosis.get("root_cause"),
+                "root_cause_entity_id": diagnosis.get("root_cause_entity_id"),
             }

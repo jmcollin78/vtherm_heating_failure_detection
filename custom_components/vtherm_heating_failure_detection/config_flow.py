@@ -18,13 +18,14 @@ from .const import (
     CONF_HEATING_PERCENT_THRESHOLD,
     CONF_TEMPERATURE_DELTA,
     CONF_VTHERM_UNIQUE_ID,
-    DEFAULT_COOLING_PERCENT_THRESHOLD,
-    DEFAULT_DELAY_MINUTES,
-    DEFAULT_ENABLED,
-    DEFAULT_HEATING_PERCENT_THRESHOLD,
-    DEFAULT_TEMPERATURE_DELTA,
     DOMAIN,
 )
+from .models import CONFIG_KEYS, default_config, legacy_config
+
+VT_DOMAIN = "versatile_thermostat"
+LEGACY_THERMOSTAT_TYPE = "thermostat_type"
+LEGACY_CENTRAL_TYPE = "thermostat_central_config"
+LEGACY_USE_CENTRAL = "use_heating_failure_detection_central_config"
 
 
 def _options_schema(defaults: dict[str, Any]) -> vol.Schema:
@@ -39,16 +40,68 @@ def _options_schema(defaults: dict[str, Any]) -> vol.Schema:
 
 
 def _defaults(data: dict[str, Any] | None = None) -> dict[str, Any]:
-    defaults = {CONF_ENABLED: DEFAULT_ENABLED, CONF_HEATING_PERCENT_THRESHOLD: DEFAULT_HEATING_PERCENT_THRESHOLD, CONF_COOLING_PERCENT_THRESHOLD: DEFAULT_COOLING_PERCENT_THRESHOLD, CONF_TEMPERATURE_DELTA: DEFAULT_TEMPERATURE_DELTA, CONF_DELAY_MINUTES: DEFAULT_DELAY_MINUTES}
+    defaults = default_config()
     if data:
         defaults.update(data)
     return defaults
+
+
+def _global_defaults(hass) -> dict[str, Any]:
+    """Return global plugin values, with historical defaults for the form."""
+    defaults = _defaults()
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        config = entry.options or entry.data
+        if not config.get(CONF_VTHERM_UNIQUE_ID):
+            defaults.update({key: value for key, value in config.items() if key in CONFIG_KEYS})
+    return defaults
+
+
+def _target_overrides(user_input: dict[str, Any], global_defaults: dict[str, Any]) -> dict[str, Any]:
+    """Keep only values explicitly different from the global plugin settings."""
+    overrides: dict[str, Any] = {}
+    for key in CONFIG_KEYS:
+        value = user_input.get(key)
+        default = global_defaults.get(key, "" if key == CONF_ACTIVATION_TEMPLATE else None)
+        if value != default:
+            overrides[key] = value
+    return overrides
+
+
+def _legacy_central_values(hass) -> dict[str, Any]:
+    """Return configured heating-failure values from the legacy central entry."""
+    for entry in hass.config_entries.async_entries(VT_DOMAIN):
+        data = entry.options or entry.data
+        if data.get(LEGACY_THERMOSTAT_TYPE) == LEGACY_CENTRAL_TYPE:
+            return legacy_config(data)
+    return {}
+
+
+def _legacy_target_values(hass, entity_id: str) -> dict[str, Any]:
+    """Resolve the legacy values selected by a VTherm configuration entry."""
+    registry_entry = er.async_get(hass).async_get(entity_id)
+    if registry_entry is None or registry_entry.config_entry_id is None:
+        return {}
+
+    core_entry = hass.config_entries.async_get_entry(registry_entry.config_entry_id)
+    if core_entry is None or core_entry.domain != VT_DOMAIN:
+        return {}
+
+    data = core_entry.options or core_entry.data
+    values = _legacy_central_values(hass) if data.get(LEGACY_USE_CENTRAL) else {}
+    values.update(legacy_config(data))
+    return values
 
 
 class HeatingFailureConfigFlow(ConfigFlow, domain=DOMAIN):
     """Configure global defaults and per-thermostat overrides."""
 
     VERSION = 1
+
+    def __init__(self) -> None:
+        """Initialize the selected VTherm kept between migration steps."""
+        super().__init__()
+        self._target_entity_id = ""
+        self._target_unique_id = ""
 
     def is_matching(self, other_flow: Self) -> bool:
         """Return whether another flow targets the same configuration entry."""
@@ -58,27 +111,56 @@ class HeatingFailureConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._async_current_entries():
             await self.async_set_unique_id(DOMAIN)
             self._abort_if_unique_id_configured()
-            return self.async_create_entry(title="Heating failure defaults", data=_defaults())
+            return await self.async_step_global(user_input)
         return await self.async_step_thermostat(user_input)
+
+    async def async_step_global(self, user_input: dict[str, Any] | None = None):
+        """Create global settings, prefilled from legacy central settings."""
+        if user_input is not None:
+            return self.async_create_entry(title="Heating failure defaults", data=user_input)
+        defaults = _defaults(_legacy_central_values(self.hass))
+        return self.async_show_form(
+            step_id="global", data_schema=_options_schema(defaults)
+        )
 
     async def async_step_thermostat(self, user_input: dict[str, Any] | None = None):
         if user_input is not None:
-            entity_id = user_input.pop("target_entity")
+            entity_id = user_input["target_entity"]
             registry_entry = er.async_get(self.hass).async_get(entity_id)
             if registry_entry is None:
                 return self.async_show_form(step_id="thermostat", data_schema=self._target_schema(), errors={"target_entity": "invalid_entity"})
-            target = registry_entry.unique_id
-            await self.async_set_unique_id(f"{DOMAIN}-{target}")
+            self._target_entity_id = entity_id
+            self._target_unique_id = registry_entry.unique_id
+            await self.async_set_unique_id(f"{DOMAIN}-{self._target_unique_id}")
             self._abort_if_unique_id_configured()
-            user_input[CONF_VTHERM_UNIQUE_ID] = target
-            state = self.hass.states.get(entity_id)
-            return self.async_create_entry(title=state.name if state else entity_id, data=user_input)
+            return await self.async_step_thermostat_options()
         return self.async_show_form(step_id="thermostat", data_schema=self._target_schema())
 
+    async def async_step_thermostat_options(
+        self, user_input: dict[str, Any] | None = None
+    ):
+        """Confirm the plugin overrides prefilled from the selected legacy VTherm."""
+        if user_input is not None:
+            user_input = _target_overrides(user_input, _global_defaults(self.hass))
+            user_input[CONF_VTHERM_UNIQUE_ID] = self._target_unique_id
+            state = self.hass.states.get(self._target_entity_id)
+            return self.async_create_entry(
+                title=state.name if state else self._target_entity_id,
+                data=user_input,
+            )
+
+        defaults = _global_defaults(self.hass)
+        defaults.update(_legacy_target_values(self.hass, self._target_entity_id))
+        return self.async_show_form(
+            step_id="thermostat_options", data_schema=_options_schema(defaults)
+        )
+
     def _target_schema(self) -> vol.Schema:
-        schema = {vol.Required("target_entity"): selector.EntitySelector(selector.EntitySelectorConfig(domain=CLIMATE_DOMAIN))}
-        schema.update(_options_schema(_defaults()).schema)
-        return vol.Schema(schema)
+        return vol.Schema({
+            vol.Required("target_entity"): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain=CLIMATE_DOMAIN)
+            )
+        })
 
     @staticmethod
     def async_get_options_flow(config_entry):
@@ -93,5 +175,11 @@ class HeatingFailureOptionsFlow(OptionsFlow):
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None):
         if user_input is not None:
+            current = self._config_entry.options or self._config_entry.data
+            if current.get(CONF_VTHERM_UNIQUE_ID):
+                user_input = _target_overrides(user_input, _global_defaults(self.hass))
             return self.async_create_entry(title="", data=user_input)
-        return self.async_show_form(step_id="init", data_schema=_options_schema(_defaults(self._config_entry.options or self._config_entry.data)))
+        current = self._config_entry.options or self._config_entry.data
+        defaults = _global_defaults(self.hass)
+        defaults.update({key: value for key, value in current.items() if key in CONFIG_KEYS})
+        return self.async_show_form(step_id="init", data_schema=_options_schema(defaults))

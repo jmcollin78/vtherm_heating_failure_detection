@@ -2,20 +2,48 @@
 
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers import entity_registry as er
 
 from .const import CONF_VTHERM_UNIQUE_ID, DOMAIN, SIGNAL_MANAGER_UPDATED
 
+VT_DOMAIN = "versatile_thermostat"
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities) -> None:
-    """Create one sensor for a thermostat-specific configuration entry."""
+    """Create sensors for targeted entries or every VTherm using global defaults."""
     config = entry.options or entry.data
-    unique_id = config.get(CONF_VTHERM_UNIQUE_ID)
-    if unique_id:
-        async_add_entities([HeatingFailureBinarySensor(hass, unique_id)])
+    target = config.get(CONF_VTHERM_UNIQUE_ID)
+    if target:
+        unique_ids = [target]
+    else:
+        targeted_ids = {
+            (plugin_entry.options or plugin_entry.data).get(CONF_VTHERM_UNIQUE_ID)
+            for plugin_entry in hass.config_entries.async_entries(DOMAIN)
+        }
+        unique_ids = [
+            thermostat_entry.unique_id
+            for thermostat_entry in hass.config_entries.async_entries(VT_DOMAIN)
+            if thermostat_entry.unique_id
+            and thermostat_entry.unique_id not in targeted_ids
+        ]
+
+    registry = er.async_get(hass)
+    entities = []
+    for unique_id in unique_ids:
+        sensor_unique_id = f"{unique_id}_heating_failure_state"
+        if registry.async_get_entity_id(BINARY_SENSOR_DOMAIN, DOMAIN, sensor_unique_id):
+            continue
+        entities.append(HeatingFailureBinarySensor(hass, unique_id))
+    if entities:
+        async_add_entities(entities)
 
 
 class HeatingFailureBinarySensor(BinarySensorEntity):

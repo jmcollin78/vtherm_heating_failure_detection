@@ -1,6 +1,18 @@
 {
     "config": {
         "step": {
+            "global": {
+                "title": "Importer la configuration centrale de détection de panne",
+                "description": "Vérifiez les valeurs importées depuis la configuration centrale de Versatile Thermostat avant de créer les valeurs par défaut du plugin.",
+                "data": {
+                    "enabled": "Activer la détection",
+                    "heating_percent_threshold": "Seuil de chauffage",
+                    "cooling_percent_threshold": "Seuil de refroidissement",
+                    "temperature_delta": "Variation minimale de température attendue",
+                    "delay_minutes": "Délai de détection (minutes)",
+                    "activation_template": "Modèle d'activation"
+                }
+            },
             "thermostat": {
                 "title": "Détection de panne de chauffage",
                 "description": "Configurez les valeurs par défaut ou sélectionnez un Versatile Thermostat.",
@@ -9,6 +21,18 @@
                     "enabled": "Activer la détection",
                     "heating_percent_threshold": "Seuil de chauffage (%)",
                     "cooling_percent_threshold": "Seuil de refroidissement (%)",
+                    "temperature_delta": "Variation minimale de température attendue",
+                    "delay_minutes": "Délai de détection (minutes)",
+                    "activation_template": "Modèle d'activation"
+                }
+            },
+            "thermostat_options": {
+                "title": "Importer la configuration de panne du thermostat",
+                "description": "Vérifiez les valeurs importées depuis le Versatile Thermostat sélectionné avant de créer sa surcharge plugin.",
+                "data": {
+                    "enabled": "Activer la détection",
+                    "heating_percent_threshold": "Seuil de chauffage",
+                    "cooling_percent_threshold": "Seuil de refroidissement",
                     "temperature_delta": "Variation minimale de température attendue",
                     "delay_minutes": "Délai de détection (minutes)",
                     "activation_template": "Modèle d'activation"

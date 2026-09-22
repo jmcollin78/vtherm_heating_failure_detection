@@ -25,9 +25,12 @@ class HeatingFailureManagerFactory:
         return MANAGER_NAME
 
     def supports(self, thermostat: InterfaceThermostatRuntime) -> bool:
-        """Return whether settings exist for this thermostat."""
+        """Return whether plugin or legacy settings exist for this thermostat."""
         entries = self._hass.data.get(DOMAIN, {}).get("entries", {})
-        return effective_config(entries, thermostat.unique_id) is not None
+        return (
+            effective_config(entries, thermostat.unique_id, thermostat.entry_infos)
+            is not None
+        )
 
     def create(self, thermostat: InterfaceThermostatRuntime) -> InterfaceFeatureManager:
         """Create a manager bound to a single runtime thermostat."""
