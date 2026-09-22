@@ -2,7 +2,7 @@
     "domain": "vtherm_heating_failure_detection",
     "name": "VTherm Heating Failure Detection",
     "codeowners": [
-        "@jmcollin"
+        "@jmcollin78"
     ],
     "config_flow": true,
     "dependencies": [
@@ -11,8 +11,11 @@
     "documentation": "https://github.com/jmcollin/vtherm_heating_failure_detection",
     "integration_type": "service",
     "iot_class": "calculated",
+    "issue_tracker": "https://github.com/jmcollin/vtherm_heating_failure_detection/issues",
     "requirements": [
         "vtherm_api>=0.5.0"
     ],
-    "version": "0.1.0"
+    "ssdp": [],
+    "version": "0.1.0",
+    "zeroconf": []
 }
